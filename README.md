@@ -12,12 +12,14 @@ server.
 SafeShot includes two protection methods:
 
 - **IP2P / EditShield**: a faster VAE latent-divergence protection mode aimed at
-  InstructPix2Pix-style instruction-based editing. This is the recommended first
+  InstructPix2Pix-style instruction-based editing. This protection path is
+  related to EditShield / Chen et al., ECCV 2024. It is the recommended first
   mode to try because it is usually less visible and runs faster.
 - **SD / BlurGuard**: a stronger Stable Diffusion protection mode inspired by
-  PhotoGuard-style VAE attacks. It combines a low-frequency, per-region blur
-  warmup with latent-space optimization. This mode can be slower and may produce
-  more visible changes, but it is intended for stronger protection tests.
+  PhotoGuard / Salman et al., 2023 and BlurGuard / Kim et al., 2025. It
+  combines a low-frequency, per-region blur warmup with latent-space
+  optimization. This mode can be slower and may produce more visible changes,
+  but it is intended for stronger protection tests.
 
 SafeShot does not provide a universal guarantee against every AI editor,
 face-swap model, image restoration system, or manual attack. Treat protected
@@ -290,11 +292,20 @@ paths in this app.
 
 Core references:
 
+- Ruoxi Chen, Haibo Jin, Yixin Liu, Jinyin Chen, Haohan Wang, and Lichao Sun.
+  "EditShield: Protecting Unauthorized Image Editing by Instruction-guided
+  Diffusion Models." ECCV 2024.
+  <https://arxiv.org/abs/2311.12066>
+- Jinsu Kim, Yunhun Nam, Minseon Kim, Sangpil Kim, and Jongheon Jeong.
+  "BlurGuard: A Simple Approach for Robustifying Image Protection Against
+  AI-Powered Editing." 2025.
+  <https://arxiv.org/abs/2511.00143>
 - Tim Brooks, Aleksander Holynski, and Alexei A. Efros. "InstructPix2Pix:
   Learning to Follow Image Editing Instructions." 2022.
   <https://arxiv.org/abs/2211.09800>
 - Hadi Salman, Alaa Khaddaj, Guillaume Leclerc, Andrew Ilyas, and Aleksander
-  Madry. "Raising the Cost of Malicious AI-Powered Image Editing." 2023.
+  Madry. "Raising the Cost of Malicious AI-Powered Image Editing"
+  (PhotoGuard). 2023.
   <https://arxiv.org/abs/2302.06588>
 - Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bjorn
   Ommer. "High-Resolution Image Synthesis with Latent Diffusion Models." 2021.
@@ -303,6 +314,20 @@ Core references:
 BibTeX:
 
 ```bibtex
+@inproceedings{chen2024editshield,
+  title={EditShield: Protecting Unauthorized Image Editing by Instruction-guided Diffusion Models},
+  author={Chen, Ruoxi and Jin, Haibo and Liu, Yixin and Chen, Jinyin and Wang, Haohan and Sun, Lichao},
+  booktitle={European Conference on Computer Vision},
+  year={2024}
+}
+
+@article{kim2025blurguard,
+  title={BlurGuard: A Simple Approach for Robustifying Image Protection Against AI-Powered Editing},
+  author={Kim, Jinsu and Nam, Yunhun and Kim, Minseon and Kim, Sangpil and Jeong, Jongheon},
+  journal={arXiv preprint arXiv:2511.00143},
+  year={2025}
+}
+
 @article{brooks2022instructpix2pix,
   title={InstructPix2Pix: Learning to Follow Image Editing Instructions},
   author={Brooks, Tim and Holynski, Aleksander and Efros, Alexei A.},
@@ -324,6 +349,11 @@ BibTeX:
   year={2021}
 }
 ```
+
+For release and redistribution notes, also see `licenses/THIRD_PARTY_NOTICES.md`.
+SafeShot source code is released under the Apache License 2.0 unless otherwise
+noted. Bundled dependencies, model files, and research-derived methods remain
+under their own licenses, terms, and citation requirements.
 
 SafeShot also depends on open-source tooling and libraries including PyTorch,
 Diffusers, Hugging Face Hub, Gradio, scikit-image, SciPy, Pillow, NumPy, and
