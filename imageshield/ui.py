@@ -56,6 +56,8 @@ def _demo_strength_gallery_html() -> str:
         ("Low", "protected-IP2P-512-100-0.0156.png", "IP2P, eps approx 4/255"),
         ("Medium", "protected-IP2P-512-20-0.03.png", "IP2P, eps approx 8/255"),
         ("High", "protected-IP2P-512-100-0.05.png", "IP2P, eps approx 13/255"),
+        ("SD Medium", "protected-SD-512-20-0.06.png", "SD, eps approx 15/255"),
+        ("SD High", "protected-SD-512-100-0.078.png", "SD, eps approx 20/255"),
     ]
     cards = []
     for label, filename, description in examples:
@@ -2342,7 +2344,7 @@ with gr.Blocks() as demo:
   .tag-warn { background: #fef9c3; color: #854d0e; }
   .tag-rec  { background: #dcfce7; color: #166534; }
   .strength-demo-grid {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px; margin: 14px 0 8px;
   }
   .strength-demo-card {
@@ -2357,7 +2359,7 @@ with gr.Blocks() as demo:
     padding: 8px 9px; min-height: 56px;
   }
   .strength-demo-card strong {
-    display: block; color: #111827; font-size: 13px; margin-bottom: 2px;
+    display: block; color: #030712; font-size: 13px; font-weight: 800; margin-bottom: 2px;
   }
   .strength-demo-card span {
     display: block; color: #4b5563; font-size: 12px; line-height: 1.35;
