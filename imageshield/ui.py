@@ -2358,11 +2358,13 @@ with gr.Blocks() as demo:
   .strength-demo-card figcaption {
     padding: 8px 9px; min-height: 56px;
   }
-  .strength-demo-card strong {
-    display: block; color: #030712; font-size: 13px; font-weight: 800; margin-bottom: 2px;
+  .strength-demo-card figcaption strong,
+  #page-guide .strength-demo-card figcaption strong {
+    display: block; color: #030712 !important; font-size: 13px; font-weight: 800; margin-bottom: 2px;
   }
-  .strength-demo-card span {
-    display: block; color: #4b5563; font-size: 12px; line-height: 1.35;
+  .strength-demo-card figcaption span,
+  #page-guide .strength-demo-card figcaption span {
+    display: block; color: #1f2937 !important; font-size: 12px; line-height: 1.35;
   }
   .strength-demo-note {
     font-size: 13px !important; color: #4b5563 !important; margin-top: 8px !important;
