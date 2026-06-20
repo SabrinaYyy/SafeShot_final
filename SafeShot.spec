@@ -13,6 +13,7 @@ datas = [
         "models/instruct-pix2pix",
     ),
     (str(PROJECT_ROOT / "licenses"), "licenses"),
+    (str(PROJECT_ROOT / "imageshield" / "demo_image"), "imageshield/demo_image"),
 ]
 binaries = []
 hiddenimports = [

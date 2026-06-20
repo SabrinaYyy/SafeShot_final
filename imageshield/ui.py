@@ -6,6 +6,7 @@ any code running inside the terminal)
 """
 
 # Import necessary packages
+import base64
 import os
 import time
 import uuid
@@ -22,19 +23,67 @@ from .protection import (
     ProtectionSettings,
     device_summary,
 )
-from .resources import user_data_dir
+from .resources import resource_path, user_data_dir
 
 SERVICE = ProtectionService()
 OUTPUT_DIR = user_data_dir() / "outputs"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 MAX_OUTPUT_AGE_SECONDS = 24 * 60 * 60
 BG_IMAGE_PATH = Path(__file__).with_name("shield_bg.png")
+DEMO_IMAGE_DIR = resource_path("imageshield", "demo_image")
 
 # EPS slider range displayed in the UI (values in units of 1/255)
 _EPS_MIN_255 = 1
 _EPS_MAX_255 = 32
 _EPS_IP2P_255 = round(EPS_IP2P * 255)   # 4
 _EPS_SD_255   = round(EPS_SD   * 255)   # 16
+
+
+def _image_data_url(filename: str) -> str:
+    path = DEMO_IMAGE_DIR / filename
+    suffix = path.suffix.lower()
+    mime = "image/jpeg" if suffix in {".jpg", ".jpeg"} else "image/png"
+    try:
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    except OSError:
+        return ""
+    return f"data:{mime};base64,{encoded}"
+
+
+def _demo_strength_gallery_html() -> str:
+    examples = [
+        ("Original", "0035_0.jpg", "Unprotected input"),
+        ("Low", "protected-IP2P-512-100-0.0156.png", "IP2P, eps approx 4/255"),
+        ("Medium", "protected-IP2P-512-20-0.03.png", "IP2P, eps approx 8/255"),
+        ("High", "protected-IP2P-512-100-0.05.png", "IP2P, eps approx 13/255"),
+    ]
+    cards = []
+    for label, filename, description in examples:
+        src = _image_data_url(filename)
+        if not src:
+            continue
+        cards.append(
+            f"""
+            <figure class="strength-demo-card">
+              <img src="{src}" alt="{label} perturbation example">
+              <figcaption>
+                <strong>{label}</strong>
+                <span>{description}</span>
+              </figcaption>
+            </figure>
+            """
+        )
+    if len(cards) != len(examples):
+        return ""
+    return f"""
+      <div class="strength-demo-grid">
+        {''.join(cards)}
+      </div>
+      <p class="strength-demo-note">
+        The examples show how stronger perturbation budgets can make protection more visible.
+        Actual visibility depends on the image content, mode, resolution, step count, and display size.
+      </p>
+    """
 
 
 def cleanup_old_outputs() -> None:
@@ -2292,6 +2341,33 @@ with gr.Blocks() as demo:
   .tag-sd   { background: #fce7f3; color: #9d174d; }
   .tag-warn { background: #fef9c3; color: #854d0e; }
   .tag-rec  { background: #dcfce7; color: #166534; }
+  .strength-demo-grid {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px; margin: 14px 0 8px;
+  }
+  .strength-demo-card {
+    margin: 0; border: 1px solid #e5e7eb; border-radius: 8px;
+    overflow: hidden; background: #fff;
+  }
+  .strength-demo-card img {
+    display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+    background: #f8fafc;
+  }
+  .strength-demo-card figcaption {
+    padding: 8px 9px; min-height: 56px;
+  }
+  .strength-demo-card strong {
+    display: block; color: #111827; font-size: 13px; margin-bottom: 2px;
+  }
+  .strength-demo-card span {
+    display: block; color: #4b5563; font-size: 12px; line-height: 1.35;
+  }
+  .strength-demo-note {
+    font-size: 13px !important; color: #4b5563 !important; margin-top: 8px !important;
+  }
+  @media (max-width: 760px) {
+    .strength-demo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
 
   /* Recommendation table */
   .rec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
@@ -2330,20 +2406,27 @@ with gr.Blocks() as demo:
   </ul>
 </div>
 
+
 <!-- Optimization Steps -->
 <div class="guide-section">
   <h2>Optimization Steps</h2>
   <p>
-    Each step refines the invisible protection layer. More steps produce a stronger perturbation
-    but take proportionally longer. The slider range is 20–100.
+    Each step is one optimization update used to compute the protection layer. More steps usually
+    give the optimizer more opportunity to improve the perturbation, but the benefit may plateau
+    and runtime will increase.
   </p>
   <ul>
-    <li><strong>20 steps</strong> — Quick preview; weaker protection. Good for testing on slow hardware.</li>
-    <li><strong>50 steps</strong> — Balanced choice for IP2P mode. Reasonable quality and speed.</li>
-    <li><strong>Any step count</strong> — SD mode warmup scales to ~1/3 of your chosen steps automatically, so PGD always gets the remaining ~2/3 regardless of total count.</li>
-    <li><strong>100 steps</strong> — Strongest protection; takes the longest.</li>
+    <li><strong>20 steps</strong> — Fast preview. Useful for testing the workflow or running on slower hardware, but protection may be weaker.</li>
+    <li><strong>50 steps</strong> — Medium setting. A reasonable starting point for local testing when balancing speed and protection quality.</li>
+    <li><strong>80 steps</strong> — Stronger setting. Better for final outputs when runtime is acceptable.</li>
+    <li><strong>100 steps</strong> — Highest setting in this app. Usually gives the strongest optimization result, but takes the longest and may show diminishing returns.</li>
   </ul>
+  <p>
+    <strong>Note:</strong> More steps do not guarantee perfect protection. The final result also depends on the selected mode,
+    image resolution, epsilon/strength, hardware, and the target editing model.
+  </p>
 </div>
+
 
 <!-- Output Resolution -->
 <div class="guide-section">
@@ -2378,14 +2461,18 @@ with gr.Blocks() as demo:
     You can always override it manually.
   </p>
 </div>
+""" + _demo_strength_gallery_html() + """
 
 <!-- Recommendation table -->
 <div class="guide-section">
   <h2>Recommended Parameters by Hardware</h2>
   <p>
-    Use this table as a starting point. Times are estimates at 100 optimization steps;
-    actual speed varies with background processes and thermal throttling.
+    Use this table as a starting point. Times are rough estimates after the models are already loaded.
+    The first run may take longer because of model loading, setup, or cache initialization. Later runs
+    in the same app window may be faster. Actual speed also depends on memory pressure, background
+    processes, thermal throttling, and the selected protection mode.
   </p>
+
   <table class="rec-table">
     <thead>
       <tr>
@@ -2399,72 +2486,106 @@ with gr.Blocks() as demo:
     </thead>
     <tbody>
       <tr>
-        <td rowspan="2"><strong>Apple M1 / M2 / M3<br>(MPS)</strong></td>
+        <td rowspan="3"><strong>Apple M1 / M2 / M3<br>(MPS)</strong></td>
         <td><span class="guide-tag tag-ip2p">IP2P</span></td>
-        <td>256 px</td>
-        <td>50</td>
+        <td>512 px</td>
+        <td>30–60</td>
         <td>4/255</td>
-        <td>~5–10 min</td>
+        <td>~2 min</td>
       </tr>
       <tr>
         <td><span class="guide-tag tag-sd">SD</span></td>
         <td>256 px</td>
-        <td>80</td>
+        <td>100</td>
         <td>16/255</td>
-        <td>~25–40 min</td>
+        <td>~1–2 min</td>
       </tr>
+      <tr class="warn-row">
+        <td><span class="guide-tag tag-sd">SD</span></td>
+        <td>512 px</td>
+        <td>40</td>
+        <td>16/255</td>
+        <td>~25 min; use only for final tests</td>
+      </tr>
+
       <tr>
-        <td rowspan="2"><strong>Nvidia GPU<br>4–6 GB VRAM</strong></td>
+        <td rowspan="3"><strong>Nvidia GPU<br>4–6 GB VRAM</strong></td>
         <td><span class="guide-tag tag-ip2p">IP2P</span></td>
         <td>512 px</td>
-        <td>100</td>
+        <td>60–100</td>
         <td>4/255</td>
-        <td>~8–15 min</td>
+        <td>~1–3 min</td>
       </tr>
       <tr>
         <td><span class="guide-tag tag-sd">SD</span></td>
         <td>256 px</td>
-        <td>80</td>
-        <td>16/255</td>
-        <td>~10–20 min</td>
-      </tr>
-      <tr>
-        <td rowspan="2"><strong>Nvidia GPU<br>8+ GB VRAM</strong></td>
-        <td><span class="guide-tag tag-ip2p">IP2P</span></td>
-        <td>512 px</td>
         <td>100</td>
-        <td>4/255</td>
-        <td>~5–10 min</td>
+        <td>16/255</td>
+        <td>~30–90 sec</td>
       </tr>
       <tr>
         <td><span class="guide-tag tag-sd">SD</span></td>
         <td>512 px</td>
+        <td>40</td>
+        <td>16/255</td>
+        <td>~8–20 min, depending on VRAM/offload</td>
+      </tr>
+
+      <tr>
+        <td rowspan="3"><strong>Nvidia GPU<br>8+ GB VRAM</strong></td>
+        <td><span class="guide-tag tag-ip2p">IP2P</span></td>
+        <td>512 px</td>
+        <td>100</td>
+        <td>4/255</td>
+        <td>~1–2 min</td>
+      </tr>
+      <tr>
+        <td><span class="guide-tag tag-sd">SD</span></td>
+        <td>256 px</td>
         <td>100</td>
         <td>16/255</td>
-        <td>~15–25 min</td>
+        <td>~20–60 sec</td>
       </tr>
+      <tr>
+        <td><span class="guide-tag tag-sd">SD</span></td>
+        <td>512 px</td>
+        <td>40–100</td>
+        <td>16/255</td>
+        <td>~5–15 min</td>
+      </tr>
+
       <tr class="warn-row">
         <td><strong>CPU only<br>(no GPU)</strong></td>
         <td><span class="guide-tag tag-ip2p">IP2P</span></td>
-        <td>128 px</td>
+        <td>128–256 px</td>
         <td>20</td>
         <td>4/255</td>
-        <td>~10–20 min</td>
+        <td>Slow; testing only</td>
       </tr>
       <tr class="warn-row">
         <td></td>
         <td><span class="guide-tag tag-sd">SD</span></td>
-        <td colspan="3" style="color:#b91c1c;">Not recommended — warmup alone takes 1–3 hours</td>
+        <td colspan="3" style="color:#b91c1c;">Not recommended — use GPU or MPS if available</td>
         <td>—</td>
       </tr>
     </tbody>
   </table>
+
   <p style="margin-top:10px;">
     <span class="guide-tag tag-rec">Tip</span>
-    Start with a lower resolution (128 or 256) to confirm the tool works on your machine,
-    then increase for final output.
+    Start with 256 px to confirm the tool works on your machine, then increase resolution only for
+    final outputs. SD mode at 512 px can be much slower than 256 px, especially on MacBook Air or
+    low-VRAM GPUs.
+  </p>
+
+  <p style="margin-top:8px;">
+    <span class="guide-tag tag-rec">Observed example</span>
+    On a MacBook Air M2, IP2P at 512 px with 30–60 steps took about 100 seconds, SD at 256 px with
+    100 steps took about 36 seconds, while SD at 512 px with 40 steps took about 25 minutes.
   </p>
 </div>
+
+
 """)
         gr.HTML(
             """
