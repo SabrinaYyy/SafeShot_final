@@ -25,6 +25,21 @@ SafeShot does not provide a universal guarantee against every AI editor,
 face-swap model, image restoration system, or manual attack. Treat protected
 images as a defensive layer, not as proof that an image can never be edited.
 
+## Build Support
+
+This repository includes the source code and packaging files needed to build
+SafeShot for both Windows and macOS:
+
+- Windows: PyInstaller build code in `SafeShot.spec`, a PowerShell helper in
+  `scripts/build_windows.ps1`, and an Inno Setup installer script in
+  `packaging/windows/SafeShot.iss`.
+- macOS: PyInstaller build code in `SafeShot.spec`, a DMG build helper in
+  `scripts/build_macos.sh`, and signing entitlements in
+  `packaging/macos/entitlements.plist`.
+
+The pinned offline model files are downloaded with `scripts/download_model.sh`
+before packaging. They are intentionally not committed to the source repository.
+
 ## Ready-to-Use Windows App
 
 Windows users should download the installer directly from the GitHub Releases
