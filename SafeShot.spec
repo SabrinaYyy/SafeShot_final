@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_data_files, copy_metadata
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy_metadata
 
 PROJECT_ROOT = Path(SPECPATH)
 
@@ -21,11 +21,13 @@ hiddenimports = [
     "diffusers.schedulers.scheduling_ddpm",
     "gradio.routes",
 ]
+hiddenimports += collect_submodules("scipy")
 
 datas += collect_data_files("gradio", include_py_files=True)
 datas += collect_data_files("gradio_client")
 datas += collect_data_files("groovy")
 datas += collect_data_files("safehttpx")
+datas += collect_data_files("scipy")
 for distribution in (
     "accelerate",
     "diffusers",

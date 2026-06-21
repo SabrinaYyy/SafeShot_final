@@ -27,13 +27,26 @@ images as a defensive layer, not as proof that an image can never be edited.
 
 ## Ready-to-Use Windows App
 
-The ready portable Windows build is:
+Windows users should download the installer directly from the GitHub Releases
+page:
+
+```text
+https://github.com/SabrinaYyy/SafeShot_final/releases
+```
+
+The installer asset is:
+
+```text
+SafeShot-Setup-0.1.0.exe
+```
+
+If a portable build is included in the release, it is:
 
 ```text
 dist/windows/SafeShot-Windows-Portable-0.1.0.zip
 ```
 
-To test it:
+To test the portable zip:
 
 1. Extract the zip file.
 2. Open the extracted `SafeShot` folder.
@@ -145,6 +158,21 @@ NVIDIA GPU.
 
 Use Python 3.10 on Windows or macOS.
 
+The packaged app is built from the files in this repository plus the pinned
+offline model files. The model files are not committed to Git because they are
+large; download them before running PyInstaller.
+
+### Windows Installer Build
+
+Prerequisites:
+
+- Windows 10 or 11, 64-bit.
+- Python 3.10.
+- Git Bash or another Bash shell for `scripts/download_model.sh`.
+- Inno Setup 6 if you want to create `SafeShot-Setup-0.1.0.exe`.
+
+From PowerShell:
+
 ```powershell
 py -3.10 -m venv .venv
 .venv\Scripts\Activate.ps1
@@ -152,14 +180,21 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements-build.txt
 ```
 
-For a CUDA Windows build, install a CUDA-enabled PyTorch wheel before running
-PyInstaller. For example, for CUDA 12.6:
+If you want the Windows installer to include CUDA-enabled PyTorch, install a
+CUDA-enabled PyTorch wheel before running PyInstaller. For example, for CUDA
+12.6:
 
 ```powershell
 python -m pip install --force-reinstall torch torchvision --index-url https://download.pytorch.org/whl/cu126
 ```
 
-Then validate and test:
+Download the pinned offline model files. From Git Bash, run:
+
+```bash
+./scripts/download_model.sh
+```
+
+Then return to PowerShell and validate the source bundle:
 
 ```powershell
 python scripts\validate_bundle.py
@@ -178,22 +213,16 @@ The PyInstaller output is:
 dist/SafeShot/SafeShot.exe
 ```
 
-The release portable folder is:
+Build the Windows installer with Inno Setup:
 
-```text
-dist/windows/portable/SafeShot/
+```powershell
+& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "packaging\windows\SafeShot.iss"
 ```
 
-The release zip is:
+If `ISCC.exe` is already on your `PATH`, this shorter command also works:
 
-```text
-dist/windows/SafeShot-Windows-Portable-0.1.0.zip
-```
-
-If Inno Setup is installed, compile:
-
-```text
-packaging/windows/SafeShot.iss
+```powershell
+ISCC.exe "packaging\windows\SafeShot.iss"
 ```
 
 The installer output name is:
@@ -202,10 +231,27 @@ The installer output name is:
 SafeShot-Setup-0.1.0.exe
 ```
 
+By default, Inno Setup writes the installer under:
+
+```text
+dist/installer/
+```
+
+The same installer can be uploaded as a GitHub Release asset for users to
+download directly.
+
 ## macOS Build
 
 macOS DMG creation requires macOS tools such as `hdiutil`, so it must be built
-on macOS:
+on macOS.
+
+Prerequisites:
+
+- macOS 12 or newer.
+- Python 3.10.
+- Xcode Command Line Tools for signing commands if you plan to sign the app.
+
+From Terminal:
 
 ```bash
 python3.10 -m venv .venv

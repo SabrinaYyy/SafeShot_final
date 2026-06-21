@@ -14,5 +14,11 @@ dist/
 *.egg-info/
 *.spec.bak
 
+# Release artifacts belong on GitHub Releases, not in the source repository.
+*.dmg
+*.exe
+*.msi
+*.zip
+
 # Downloaded by scripts/download_model.sh. Do not commit model checkpoints.
 models/instruct-pix2pix/
